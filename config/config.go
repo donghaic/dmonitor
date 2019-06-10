@@ -16,7 +16,9 @@ type Config struct {
 
 	Httpcli HttpCli
 
-	TaskQueueDataDir string
+	LocalQueueDataDir string
+
+	LogDataDir string
 }
 
 func ReadConfig(configFile string) (*Config, error) {

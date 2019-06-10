@@ -30,3 +30,4 @@ httpcli:
   maxIdleConnsPerHost: 50
 
 taskQueueDataDir: ./logs
+logDataDir: ./logs

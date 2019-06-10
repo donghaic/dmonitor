@@ -15,14 +15,14 @@ func NewPubSub(redisPool *ConnPool) *PubSubService {
 //
 // Publish publish key value
 func (s *PubSubService) Publish(key string, value string) error {
-	conn := s.pool.GetConnection()
+	conn, _ := s.pool.GetConnection()
 	conn.Do("PUBLISH", key, value)
 	return nil
 }
 
 // Subscribe subscribe
 func (s *PubSubService) Subscribe(key string, callback func([]byte)) error {
-	rc := s.pool.GetConnection()
+	rc, _ := s.pool.GetConnection()
 	psc := predis.PubSubConn{Conn: rc}
 	if err := psc.Subscribe(key); err != nil {
 		return err

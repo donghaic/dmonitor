@@ -1,5 +1,6 @@
 package models
 
+// 点击事件请求信息
 type ClickParams struct {
 	Api          string
 	OfferId      string
@@ -36,6 +37,35 @@ type ClickParams struct {
 	SyncCode     int
 	SyncCnt      string
 	SyncErr      string
+}
+
+// 转化事件请求信息
+type EventParams struct {
+	ClickId string
+
+	Eidfa        string
+	Eip          string
+	EgoogleAdvId string
+	EandroidId   string
+	Eimei        string
+	EventName    string
+	EventValue   string
+
+	PayOut string
+
+	EventType string
+	EventTs   int64
+	EventDay  string
+	EventHour int
+	EventMin  int
+	EventSec  int
+
+	ReqUrl string
+	ReqIp  string
+	ReqUa  string
+
+	OfferId string
+	ClickTs string
 }
 
 type Response struct {

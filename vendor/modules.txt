@@ -2,6 +2,10 @@
 github.com/arthurkiller/rollingwriter
 # github.com/beeker1121/goque v2.0.1+incompatible
 github.com/beeker1121/goque
+# github.com/boltdb/bolt v1.3.1
+github.com/boltdb/bolt
+# github.com/buaazp/fasthttprouter v0.1.1
+github.com/buaazp/fasthttprouter
 # github.com/fsnotify/fsnotify v1.4.7
 github.com/fsnotify/fsnotify
 # github.com/garyburd/redigo v1.6.0
@@ -60,6 +64,8 @@ github.com/syndtr/goleveldb/leveldb/memdb
 github.com/syndtr/goleveldb/leveldb/opt
 github.com/syndtr/goleveldb/leveldb/storage
 github.com/syndtr/goleveldb/leveldb/table
+# github.com/ua-parser/uap-go v0.0.0-20190303233514-1004ccd816b3
+github.com/ua-parser/uap-go/uaparser
 # github.com/valyala/bytebufferpool v1.0.0
 github.com/valyala/bytebufferpool
 # github.com/valyala/fasthttp v1.3.0
@@ -83,10 +89,10 @@ golang.org/x/sys/unix
 golang.org/x/text/transform
 golang.org/x/text/unicode/norm
 # gopkg.in/mgo.v2 v2.0.0-20180705113604-9856a29383ce
-gopkg.in/mgo.v2
 gopkg.in/mgo.v2/bson
+gopkg.in/mgo.v2
+gopkg.in/mgo.v2/internal/json
 gopkg.in/mgo.v2/internal/sasl
 gopkg.in/mgo.v2/internal/scram
-gopkg.in/mgo.v2/internal/json
 # gopkg.in/yaml.v2 v2.2.2
 gopkg.in/yaml.v2

@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"unsafe"
@@ -32,4 +33,21 @@ func GenUniqueId(campaignid string, ts int64, uniid string) string {
 	pstr := strings.Join([]string{campaignid, strconv.FormatInt(ts, 10)}, "r")
 	bid := []byte(uniid)
 	return strings.Join([]string{pstr, string(bid[(len(pstr) + 1):])}, "r")
+}
+
+func GenUniqueIdExt(campaignid string, ts int64, uniid string) string {
+	changeid := strings.Join([]string{"wy", campaignid}, "")
+
+	pstr := strings.Join([]string{changeid, strconv.FormatInt(ts, 10)}, "r")
+
+	bid := []byte(uniid)
+	padding := string(bid[(len(bid)/4)*3:])
+	padding = strings.Replace(padding, "r", "x", -1)
+
+	return strings.Join([]string{pstr, padding}, "r")
+}
+
+func Decimal(value float64) float64 {
+	value, _ = strconv.ParseFloat(fmt.Sprintf("%.2f", value-0.005), 64)
+	return value
 }

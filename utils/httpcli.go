@@ -1,9 +1,9 @@
 package utils
 
 import (
+	"destroyer-monitor/config"
 	"errors"
 	"fmt"
-	"destroyer-monitor/config"
 	"io/ioutil"
 	"net/http"
 	"net/url"
@@ -57,3 +57,5 @@ func (h HttpConPool) ReqGet(reqUrl string) (string, int, error) {
 		return "http client request do res nil.", 500, errors.New("http client request do res nil.")
 	}
 }
+
+

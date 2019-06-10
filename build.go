@@ -38,7 +38,7 @@ var (
 	workingDir            string
 	includeBuildId        bool     = true
 	buildId               string   = "0"
-	binaries              []string = []string{"click-server", "conv-server"}
+	binaries              []string = []string{"click-server", "conv-server", "log-worker"}
 	isDev                 bool     = true
 )
 

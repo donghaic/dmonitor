@@ -79,6 +79,7 @@ func (p *ConnPool) ExpireKey(key string, expireTime int64) (interface{}, error) 
 	return conn.Do("EXPIRE", key, expireTime)
 }
 
-func (p *ConnPool) GetConnection() redis.Conn {
-	return p.raw.Get()
+func (p *ConnPool) GetConnection() (redis.Conn, error) {
+	conn := p.raw.Get()
+	return conn, conn.Err()
 }
