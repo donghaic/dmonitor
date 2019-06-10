@@ -38,40 +38,46 @@ func (h *ApiClickHandler) Handle(params *models.ClickParams) *models.Response {
 		}
 	}
 
-	channel, errt := h.RedisDao.GetChannel(params.ChannelId)
-	if nil != errt {
-		zap.Get().Error("get channel error.", params.ChannelId, errt)
+	channel, sysLog := h.RedisDao.GetChannel(params.ChannelId)
+	if nil != sysLog {
+		zap.Get().Error("get channel error.", params.ChannelId, sysLog)
 		return &models.Response{
 			Code:    200,
 			Content: "parameter error [channel not exists]",
 		}
 	}
 
-	offer, errt := h.RedisDao.GetApiOffer(netunionid, params.OfferId)
-	if nil != errt {
+	offer, sysLog := h.RedisDao.GetApiOffer(netunionid, params.OfferId)
+	if nil != sysLog {
 		//订单获取失败，走切换流程
 		clickId := strings.Join([]string{params.ChannelId, params.OfferId, strconv.FormatInt(params.ClickTs, 10)}, "^")
 		params.ClickId = utils.GenUniqueIdExt(params.OfferId, params.ClickTs, utils.Md5(clickId))
 		return h.switchToSmartlink(params, nil, channel, "offer not exists")
 	}
 
-	blackListInfo, errt := h.RedisDao.GetBlacklist(params.OfferId)
-	if nil != errt && errt.ErrType != models.RedisQueryNil {
-		log.Println("blackListInfo info. error.", blackListInfo, errt)
+	blackListInfo, sysLog := h.RedisDao.GetBlacklist(params.OfferId)
+	if nil != sysLog && sysLog.ErrType != models.RedisQueryNil {
+		log.Println("blackListInfo info. error.", blackListInfo, sysLog)
 		zap.Get().Error("query black list error, params.OfferId=", params.OfferId, err)
 	}
 
-	daycvs, errt := h.RedisDao.GetDayCap(true, "", params.OfferId)
-	if nil != errt && errt.ErrType != models.RedisQueryNil {
-		log.Println("daycvs info. error.", daycvs, errt)
+	daycvs, sysLog := h.RedisDao.GetDayCap(true, "", params.OfferId)
+	if nil != sysLog && sysLog.ErrType != models.RedisQueryNil {
+		log.Println("daycvs info. error.", daycvs, sysLog)
 	}
 
 	return h.process(params, offer, channel, blackListInfo, daycvs)
 }
 
-func (h *ApiClickHandler) process(params *models.ClickParams, offer *models.ApiOffer,
-	channel *models.Channel, blackListInfos map[string]string, daycvs map[string]int) *models.Response {
-	clickId := strings.Join([]string{params.ChannelId, params.OfferId, strconv.Itoa(offer.NetunionId), strconv.FormatInt(params.ClickTs, 10)}, "^")
+func (h *ApiClickHandler) process(
+	params *models.ClickParams,
+	offer *models.ApiOffer,
+	channel *models.Channel,
+	blackListInfos map[string]string,
+	daycvs map[string]int) *models.Response {
+	// 重新生成唯一ID
+	clickId := strings.Join([]string{params.ChannelId, params.OfferId, strconv.Itoa(offer.NetunionId),
+		strconv.FormatInt(params.ClickTs, 10)}, "^")
 	params.ClickId = utils.GenUniqueIdExt(params.OfferId, params.ClickTs, utils.Md5(clickId))
 
 	//达到cap后，进入切换流程
@@ -109,7 +115,7 @@ func (h *ApiClickHandler) process(params *models.ClickParams, offer *models.ApiO
 
 	params.ReplaceLink = relink
 
-	go h.apiLogSuccess(params, offer, channel)
+	go h.buildLogAndSave(params, offer, channel)
 
 	return &models.Response{
 		Code:    302,
@@ -118,16 +124,17 @@ func (h *ApiClickHandler) process(params *models.ClickParams, offer *models.ApiO
 }
 
 func (h *ApiClickHandler) switchToSmartlink(params *models.ClickParams, offer *models.ApiOffer, channel *models.Channel, cause string) *models.Response {
+	// 是否存在smart link
 	if 0 < len(services.SmarklinkOffers) {
+		// 随机选择smart link进行切换
 		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		rindex := r.Intn(len(services.SmarklinkOffers))
+		rndIndex := r.Intn(len(services.SmarklinkOffers))
 
-		campaignid := services.SmarklinkOffers[rindex]
+		campaignid := services.SmarklinkOffers[rndIndex]
 		netlenstr := string([]rune(campaignid)[:1])
 		netlen, err := strconv.ParseInt(netlenstr, 10, 32)
 		if nil != err {
-			// go h.CatchLog.SysErrorLog(params)
-			log.Println("switchToSmartlink. parse netunion id error.", campaignid, err.Error())
+			zap.Get().Error("switchToSmartlink. parse netunion id error.", campaignid, err.Error())
 			return &models.Response{
 				Code:    200,
 				Content: "parameter error [.offer_id]",
@@ -144,6 +151,7 @@ func (h *ApiClickHandler) switchToSmartlink(params *models.ClickParams, offer *m
 			}
 		}
 
+		// 切换就是换了个别的单子的的连接，302返回给客户端
 		srclink := smoffer.NetTrackLink
 		relink := strings.Replace(srclink, "__CLICKID__", params.ClickId, -1)
 		relink = strings.Replace(relink, "__IDFA__", params.Idfa, -1)
@@ -154,21 +162,22 @@ func (h *ApiClickHandler) switchToSmartlink(params *models.ClickParams, offer *m
 
 		params.ReplaceLink = relink
 
-		go h.apiLogSwitchSuccess(params, offer, smoffer, channel)
+		go h.buildSwitchLogAndSave(params, offer, smoffer, channel)
 
 		return &models.Response{
 			Code:    302,
 			Content: relink,
 		}
-	}
+	} else {
 
-	return &models.Response{
-		Code:    200,
-		Content: strings.Join([]string{"error", cause}, ":"),
+		return &models.Response{
+			Code:    200,
+			Content: strings.Join([]string{"error", cause}, ":"),
+		}
 	}
 }
 
-func (l *ApiClickHandler) apiLogSuccess(params *models.ClickParams, offer *models.ApiOffer, channel *models.Channel) {
+func (h *ApiClickHandler) buildLogAndSave(params *models.ClickParams, offer *models.ApiOffer, channel *models.Channel) {
 
 	logs := models.ClickLog{
 		LogType:   "click",
@@ -247,10 +256,10 @@ func (l *ApiClickHandler) apiLogSuccess(params *models.ClickParams, offer *model
 		return
 	}
 
-	_ = l.Queue.Enqueue(logs.ClickId, bytes)
+	_ = h.Queue.Enqueue(logs.ClickId, bytes)
 }
 
-func (l *ApiClickHandler) apiLogSwitchSuccess(params *models.ClickParams, offer *models.ApiOffer, swoffer *models.ApiOffer, channel *models.Channel) {
+func (h *ApiClickHandler) buildSwitchLogAndSave(params *models.ClickParams, offer *models.ApiOffer, swoffer *models.ApiOffer, channel *models.Channel) {
 	logs := models.ClickLog{
 		LogType:   "click",
 		OfferType: "api",
@@ -350,5 +359,5 @@ func (l *ApiClickHandler) apiLogSwitchSuccess(params *models.ClickParams, offer 
 		return
 	}
 
-	_ = l.Queue.Enqueue(logs.ClickId, bytes)
+	_ = h.Queue.Enqueue(logs.ClickId, bytes)
 }

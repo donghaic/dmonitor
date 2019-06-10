@@ -81,13 +81,16 @@ func main() {
 		case "setup":
 			setup()
 
-		case "build-impclk":
+		case "build-click":
 			clean()
-			build("impclk-server", "./cmd/impclk-server", []string{})
+			build("click-server", "./cmd/click-server", []string{})
 
 		case "build-conv":
 			clean()
 			build("conv-server", "./cmd/conv-server", []string{})
+		case "build-worker":
+			clean()
+			build("log-worker", "./cmd/log-worker", []string{})
 
 		case "build":
 			//clean()

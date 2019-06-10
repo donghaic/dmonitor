@@ -14,45 +14,22 @@ import (
 )
 
 type RedisCache struct {
-	offerPool     *redis.ConnPool
-	channelPool   *redis.ConnPool
-	blacklistPool *redis.ConnPool
-	daycapPool    *redis.ConnPool
+	entityPool *redis.ConnPool
+	daycapPool *redis.ConnPool
 }
 
 func NewRedisCache(cnf *config.Config) (*RedisCache, error) {
 	return nil, nil
 }
 
-func (r *RedisCache) GetApiOffer(netunionid, campaignid string) (models.ApiOffer, *models.SysLog) {
-	key := strings.Join([]string{"netunion", "offer", "netunion", netunionid, "offer", campaignid}, ":")
+func (r *RedisCache) GetApiOffer(netunionid, offerId string) (*models.ApiOffer, *models.SysLog) {
+	key := strings.Join([]string{"netunion", "offer", "netunion", netunionid, "offer", offerId}, ":")
 
-	conn, err := r.offerPool.GetConnection()
-	if nil != err {
-		return models.ApiOffer{}, &models.SysLog{
-			SystemName: "DestroyerClick",
-			FileName:   "src/mcad.com/OnlineClk/MemCache/RedisCache.go",
-			FileLine:   27,
-			Function:   "func (r *RedisCache) GetApiOffer(netunionid, campaignid string) (models.ApiOffer, *models.SysLog)",
-			ErrType:    models.RedisConnExhaust,
-			ErrInfo:    err.Error(),
-		}
-	}
+	conn, err := r.entityPool.GetConnection()
 	defer conn.Close()
 
 	mapStr, err := redigo.StringMap(conn.Do("HGETALL", key))
 	if nil == err {
-		if _, ok := mapStr["unique_id"]; !ok {
-			return models.ApiOffer{}, &models.SysLog{
-				SystemName: "DestroyerClick",
-				FileName:   "src/mcad.com/OnlineClk/MemCache/RedisCache.go",
-				FileLine:   41,
-				Function:   "func (r *RedisCache) GetRedisCampaign(id int) (models.Campaign, *models.SysLog)",
-				ErrType:    models.RedisQueryNil,
-				ErrInfo:    key,
-			}
-		}
-
 		data := models.ApiOffer{
 			OperatorName: mapStr["operator_name"],
 			SalesName:    mapStr["sales_name"],
@@ -110,44 +87,15 @@ func (r *RedisCache) GetApiOffer(netunionid, campaignid string) (models.ApiOffer
 			data.Updated = updated
 		}
 
-		return data, nil
+		return &data, nil
 	}
-
-	if redigo.ErrNil == err {
-		return models.ApiOffer{}, &models.SysLog{
-			SystemName: "DestroyerClick",
-			FileName:   "src/mcad.com/OnlineClk/MemCache/RedisCache.go",
-			FileLine:   41,
-			Function:   "func (r *RedisCache) GetRedisCampaign(id int) (models.Campaign, *models.SysLog)",
-			ErrType:    models.RedisQueryNil,
-			ErrInfo:    key,
-		}
-	}
-
-	return models.ApiOffer{}, &models.SysLog{
-		SystemName: "DestroyerClick",
-		FileName:   "src/mcad.com/OnlineClk/MemCache/RedisCache.go",
-		FileLine:   70,
-		Function:   "func (r *RedisCache) GetRedisCampaign(id int) (models.Campaign, *models.SysLog)",
-		ErrType:    models.RedisQueryErr,
-		ErrInfo:    key,
-	}
+	return nil, nil
 }
 
 func (r *RedisCache) GetCusOffer(campaignid string) (models.CustomerOffer, *models.SysLog) {
 	key := strings.Join([]string{"customer", "offer", campaignid}, ":")
 
-	conn, err := r.offerPool.GetConnection()
-	if nil != err {
-		return models.CustomerOffer{}, &models.SysLog{
-			SystemName: "DestroyerClick",
-			FileName:   "src/mcad.com/OnlineClk/MemCache/RedisCache.go",
-			FileLine:   27,
-			Function:   "func (r *RedisCache) GetApiOffer(netunionid, campaignid string) (models.ApiOffer, *models.SysLog)",
-			ErrType:    models.RedisConnExhaust,
-			ErrInfo:    err.Error(),
-		}
-	}
+	conn, err := r.entityPool.GetConnection()
 	defer conn.Close()
 
 	jsonStr, err := redigo.String(conn.Do("GET", key))
@@ -191,17 +139,7 @@ func (r *RedisCache) GetCusOffer(campaignid string) (models.CustomerOffer, *mode
 func (r *RedisCache) GetRedisChannel(channelid string) (models.Channel, *models.SysLog) {
 	key := strings.Join([]string{"channel", "info", "channel", channelid}, ":")
 
-	conn, err := r.channelPool.GetConnection()
-	if nil != err {
-		return models.Channel{}, &models.SysLog{
-			SystemName: "DestroyerClick",
-			FileName:   "src/mcad.com/OnlineClk/MemCache/RedisCache.go",
-			FileLine:   27,
-			Function:   "func (r *RedisCache) GetRedisChannel(id int) (models.Campaign, *models.SysLog)",
-			ErrType:    models.RedisConnExhaust,
-			ErrInfo:    err.Error(),
-		}
-	}
+	conn, err := r.entityPool.GetConnection()
 	defer conn.Close()
 
 	jsonStr, err := redigo.StringMap(conn.Do("HGETALL", key))
@@ -272,7 +210,7 @@ func (r *RedisCache) GetRedisChannel(channelid string) (models.Channel, *models.
 func (r *RedisCache) GetRedisBlackList(campaignid string) (map[string]string, *models.SysLog) {
 	key := strings.Join([]string{"blacklist", "offer", campaignid}, ":")
 
-	conn, err := r.blacklistPool.GetConnection()
+	conn, err := r.entityPool.GetConnection()
 	if nil != err {
 		return map[string]string{}, &models.SysLog{
 			SystemName: "DestroyerClick",
@@ -372,7 +310,7 @@ func (r *RedisCache) GetCampaignDayStats(isapi bool, campaignid string) (int, *m
 }
 
 func (r *RedisCache) SetSmartLink(idsstr string) error {
-	conn, err := r.offerPool.GetConnection()
+	conn, err := r.entityPool.GetConnection()
 	if nil != err {
 		log.Println("SetSmartLink. get redis connection error.", err.Error())
 		return err
@@ -388,18 +326,18 @@ func (r *RedisCache) SetSmartLink(idsstr string) error {
 	return nil
 }
 
-func (r *RedisCache) GetSmartLink() string {
-	conn, err := r.offerPool.GetConnection()
+func (r *RedisCache) GetSmartLink() (string, error) {
+	conn, err := r.entityPool.GetConnection()
+	defer conn.Close()
 	if nil != err {
 		log.Println("SetSmartLink. get redis connection error.", err.Error())
-		return ""
+		return "", err
 	}
-	defer conn.Close()
 
 	dstr, err := redigo.String(conn.Do("GET", "smartlink:lige"))
 	if err != nil {
 		log.Println("SetSmartLink. get smartlink:lige error.", err.Error())
-		return ""
+		return "", err
 	}
-	return dstr
+	return dstr, nil
 }

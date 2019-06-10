@@ -1,0 +1,20 @@
+version: '2'
+services:
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    expose:
+      - "6379"
+  mongodb:
+    image: mongo:3.6
+    environment:
+      - MONGO_DATA_DIR=/data/db
+      - MONGO_LOG_DIR=/dev/null
+    volumes:
+      - /data/docker/db:/data/db
+    ports:
+      - 27017:27017
+    expose:
+      - "27017"
+    command: mongod --smallfiles --logpath=/data/db

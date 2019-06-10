@@ -21,49 +21,32 @@ func NewRedisDao(conf *config.Config) (*RedisDao, error) {
 	return nil, nil
 }
 
-func (m *RedisDao) GetApiOffer(netunionid, campaignid string) (*models.ApiOffer, *models.SysLog) {
+func (r *RedisDao) GetApiOffer(netunionid, offerId string) (*models.ApiOffer, *models.SysLog) {
 
-	offcache := m.localCache.GetApiOffer(campaignid)
-	if nil != offcache {
-		return offcache, nil
+	localOffer := r.localCache.GetApiOffer(offerId)
+	if nil != localOffer {
+		return localOffer, nil
 	}
 
-	offer, err := m.redisCache.GetApiOffer(netunionid, campaignid)
+	offer, err := r.redisCache.GetApiOffer(netunionid, offerId)
 	if nil == err {
-		go m.localCache.SetApiOffer(offer)
-		return &offer, nil
+		go r.localCache.SetApiOffer(offer)
+		return offer, nil
 	}
 
 	return nil, err
 }
 
-func (m *RedisDao) GetCusOffer(campaignid string) (*models.CustomerOffer, *models.SysLog) {
+func (r *RedisDao) GetCusOffer(campaignid string) (*models.CustomerOffer, *models.SysLog) {
 
-	offcache := m.localCache.GetCusOffer(campaignid)
+	offcache := r.localCache.GetCusOffer(campaignid)
 	if nil != offcache {
 		return offcache, nil
 	}
 
-	offer, err := m.redisCache.GetCusOffer(campaignid)
+	offer, err := r.redisCache.GetCusOffer(campaignid)
 	if nil == err {
-		go m.localCache.SetCusOffer(offer)
-
-		return &offer, nil
-	}
-
-	return nil, err
-}
-
-func (m *RedisDao) GetChannel(channelid string) (*models.Channel, *models.SysLog) {
-
-	offcache := m.localCache.GetChannel(channelid)
-	if nil != offcache {
-		return offcache, nil
-	}
-
-	offer, err := m.redisCache.GetRedisChannel(channelid)
-	if nil == err {
-		go m.localCache.SetChannel(offer)
+		go r.localCache.SetCusOffer(offer)
 
 		return &offer, nil
 	}
@@ -71,16 +54,31 @@ func (m *RedisDao) GetChannel(channelid string) (*models.Channel, *models.SysLog
 	return nil, err
 }
 
-func (m *RedisDao) GetBlacklist(campaignid string) (map[string]string, *models.SysLog) {
+func (r *RedisDao) GetChannel(channelid string) (*models.Channel, *models.SysLog) {
 
-	offcache := m.localCache.GetBlacklist(campaignid)
+	offcache := r.localCache.GetChannel(channelid)
+	if nil != offcache {
+		return offcache, nil
+	}
+
+	offer, err := r.redisCache.GetRedisChannel(channelid)
+	if nil == err {
+		go r.localCache.SetChannel(offer)
+		return &offer, nil
+	}
+	return nil, err
+}
+
+func (r *RedisDao) GetBlacklist(campaignid string) (map[string]string, *models.SysLog) {
+
+	offcache := r.localCache.GetBlacklist(campaignid)
 	if _, ok := offcache["type"]; ok {
 		return offcache, nil
 	}
 
-	offer, err := m.redisCache.GetRedisBlackList(campaignid)
+	offer, err := r.redisCache.GetRedisBlackList(campaignid)
 	if nil == err {
-		go m.localCache.SetBlackList(offer)
+		go r.localCache.SetBlackList(offer)
 
 		return offer, nil
 	}
@@ -88,17 +86,17 @@ func (m *RedisDao) GetBlacklist(campaignid string) (map[string]string, *models.S
 	return map[string]string{}, err
 }
 
-func (m *RedisDao) GetDayCap(isapi bool, offerid, campaignid string) (map[string]int, *models.SysLog) {
+func (r *RedisDao) GetDayCap(isapi bool, offerid, campaignid string) (map[string]int, *models.SysLog) {
 	if isapi {
 
-		isupdate, offcache := m.localCache.GetDayCapInfo(true, "", campaignid)
+		isupdate, offcache := r.localCache.GetDayCap(true, "", campaignid)
 		if nil != offcache && !isupdate {
 			return offcache, nil
 		}
 
-		offer, err := m.redisCache.GetCampaignDayStats(true, campaignid)
+		offer, err := r.redisCache.GetCampaignDayStats(true, campaignid)
 		if nil == err {
-			go m.localCache.SetCampaignCap(true, campaignid, offer)
+			go r.localCache.SetCampaignCap(true, campaignid, offer)
 
 			return map[string]int{
 				"offer":    0,
@@ -110,16 +108,16 @@ func (m *RedisDao) GetDayCap(isapi bool, offerid, campaignid string) (map[string
 
 	} else {
 
-		isupdate, offcache := m.localCache.GetDayCapInfo(false, offerid, campaignid)
+		isupdate, offcache := r.localCache.GetDayCap(false, offerid, campaignid)
 		if nil != offcache && !isupdate {
 			return offcache, nil
 		}
 
-		offercvs, _ := m.redisCache.GetOfferDayStats(offerid)
-		camcvs, err := m.redisCache.GetCampaignDayStats(false, campaignid)
+		offercvs, _ := r.redisCache.GetOfferDayStats(offerid)
+		camcvs, err := r.redisCache.GetCampaignDayStats(false, campaignid)
 		if nil == err {
-			go m.localCache.SetCampaignCap(false, campaignid, camcvs)
-			go m.localCache.SetOfferCap(offerid, offercvs)
+			go r.localCache.SetCampaignCap(false, campaignid, camcvs)
+			go r.localCache.SetOfferCap(offerid, offercvs)
 
 			return map[string]int{
 				"offer":    offercvs,
@@ -131,7 +129,7 @@ func (m *RedisDao) GetDayCap(isapi bool, offerid, campaignid string) (map[string
 	}
 }
 
-func (m *RedisDao) Update(s string, s2 string) {
+func (r *RedisDao) Update(s string, s2 string) {
 
 }
 func (r *RedisDao) GetOfferDayStats(offerid string) (int, *models.SysLog) {
@@ -145,11 +143,11 @@ func (r *RedisDao) GetCampaignDayStats(isapi bool, campaignid string) (int, *mod
 }
 
 func (r *RedisDao) SetSmartLink(idsstr string) error {
-
-	return nil
+	err := r.redisCache.SetSmartLink(idsstr)
+	return err
 }
 
-func (r *RedisDao) GetSmartLink() string {
-
-	return ""
+func (r *RedisDao) GetSmartLink() (string, error) {
+	smartLink, err := r.redisCache.GetSmartLink()
+	return smartLink, err
 }

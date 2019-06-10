@@ -12,6 +12,10 @@ type MongoPool struct {
 }
 
 func NewMgoPool(options *DBOption) (*MongoPool, error) {
+	if options.Timeout == 0 {
+		// 默认5s
+		options.Timeout = 5
+	}
 	mango := &MongoPool{}
 	mango.option = options
 	zap.Get().Info("start mongo session")

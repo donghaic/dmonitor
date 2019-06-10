@@ -12,24 +12,32 @@ type LocalQueue struct {
 }
 
 func NewLocalQueue(cnf *config.Config) (*LocalQueue, error) {
-	err := os.MkdirAll(cnf.LocalQueueDataDir, os.ModePerm)
+	err := os.MkdirAll(cnf.Queue.LocalDataDir, os.ModePerm)
 	if err != nil {
 		zap.Get().Info("", err)
 	}
-	q, err := goque.OpenQueue(cnf.LocalQueueDataDir)
+	q, err := goque.OpenQueue(cnf.Queue.LocalDataDir)
 	if err != nil {
 		return nil, err
 	}
 	return &LocalQueue{q,}, nil
 }
 
-func (l *LocalQueue) Enqueue(clickId string, value []byte) error {
-	_, e := l.q.Enqueue(value)
+func (q *LocalQueue) Enqueue(clickId string, value []byte) error {
+	_, e := q.q.Enqueue(value)
 	return e
 }
 
-func (l *LocalQueue) Dequeue() (*Item, error) {
-	item, e := l.q.Dequeue()
+func (q *LocalQueue) Dequeue() (*Item, error) {
+	item, e := q.q.Dequeue()
+	if e != nil {
+		return nil, e
+	}
+	return &Item{item.Key, item.Value}, nil
+}
+
+func (q *LocalQueue) PeekByOffset(offset uint64) (*Item, error) {
+	item, e := q.q.PeekByOffset(offset)
 	if e != nil {
 		return nil, e
 	}

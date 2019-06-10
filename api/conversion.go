@@ -11,15 +11,15 @@ import (
 	"time"
 )
 
-type conversion struct {
+type Conversion struct {
 	handler *handler.ConvHandler
 }
 
-func NewConversion(handler *handler.ConvHandler) *conversion {
-	return &conversion{handler,}
+func NewConversion(handler *handler.ConvHandler) *Conversion {
+	return &Conversion{handler,}
 }
 
-func (c *conversion) Handle(ctx *fasthttp.RequestCtx) {
+func (c *Conversion) Handle(ctx *fasthttp.RequestCtx) {
 	args := ctx.URI().QueryArgs()
 	params := &models.EventParams{
 		ClickId:      string(args.Peek("click_id")),

@@ -37,7 +37,7 @@ func (l *LocalCacheService) Update(tp, id string) {
 
 }
 
-func (l *LocalCacheService) GetDayCapInfo(isapi bool, offerid string, campaignid string) (bool, map[string]int) {
+func (l *LocalCacheService) GetDayCap(isapi bool, offerid string, campaignid string) (bool, map[string]int) {
 	return false, nil
 }
 
@@ -59,7 +59,7 @@ func (l *LocalCacheService) GetBlacklist(offerid string) map[string]string {
 	return nil
 }
 
-func (l *LocalCacheService) SetApiOffer(offer models.ApiOffer) {
+func (l *LocalCacheService) SetApiOffer(offer *models.ApiOffer) {
 
 }
 

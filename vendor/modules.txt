@@ -24,6 +24,10 @@ github.com/hashicorp/hcl/hcl/scanner
 github.com/hashicorp/hcl/hcl/strconv
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
+# github.com/johntech-o/gorpc v0.0.0-20190508161658-a63b4699b194
+github.com/johntech-o/gorpc
+# github.com/johntech-o/timewheel v0.0.0-20170621084024-0dfaa51dd881
+github.com/johntech-o/timewheel
 # github.com/klauspost/compress v1.4.0
 github.com/klauspost/compress/flate
 github.com/klauspost/compress/gzip
@@ -40,6 +44,8 @@ github.com/patrickmn/go-cache
 github.com/pelletier/go-toml
 # github.com/robfig/cron v1.1.0
 github.com/robfig/cron
+# github.com/serialx/hashring v0.0.0-20190515033939-7706f26af194
+github.com/serialx/hashring
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem

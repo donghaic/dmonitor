@@ -21,8 +21,9 @@ type DelayedTaskQueue struct {
 }
 
 type Task struct {
-	Cnt    int
-	Params *models.EventParams
+	Cnt            int
+	Params         *models.EventParams
+	LastTimeNotify int64
 }
 
 type Worker interface {
@@ -32,7 +33,7 @@ type Worker interface {
 func NewDelayedQueue(dataFile string) (*DelayedTaskQueue, error) {
 	_ = os.MkdirAll(dataFile, os.ModePerm)
 
-	db, err := bolt.Open(fmt.Sprintf("%s/task.db", dataFile), 0600, nil)
+	db, err := bolt.Open(fmt.Sprintf("%s/delay_task.db", dataFile), 0600, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -80,7 +81,7 @@ func (d *DelayedTaskQueue) Delete(impId string) error {
 
 func (d *DelayedTaskQueue) startTimer() {
 	zap.Get().Info("start delay task queue timer")
-	loop := time.NewTimer(time.Minute * 1)
+	loop := time.NewTimer(time.Minute * 5)
 	for {
 		select {
 		case <-loop.C:
@@ -100,7 +101,7 @@ func (d *DelayedTaskQueue) startTimer() {
 				}
 				return nil
 			})
-			loop.Reset(time.Minute * 1)
+			loop.Reset(time.Minute * 5)
 		}
 	}
 }

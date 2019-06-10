@@ -12,9 +12,10 @@ type SmartLinkApi struct {
 }
 
 func (s *SmartLinkApi) GetSmartLink(ctx *fasthttp.RequestCtx) {
+	link, _ := s.redisDao.GetSmartLink()
 	resdata := map[string]interface{}{
 		"smartlink_offerids": services.SmarklinkOffers,
-		"slredis_offerids":   s.redisDao.GetSmartLink(),
+		"slredis_offerids":   link,
 	}
 	resbyte, _ := json.Marshal(resdata)
 	_, _ = ctx.WriteString(string(resbyte))

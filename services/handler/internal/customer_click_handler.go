@@ -32,8 +32,7 @@ func (c *CustomerClickHandler) Handle(params *models.ClickParams) *models.Respon
 
 	daycvs, err := c.RedisDao.GetDayCap(false, strconv.Itoa(offer.OfferId), params.OfferId)
 	if nil != err && err.ErrType != models.RedisQueryNil {
-		//错误处理
-		// go c.CatchLog.SysErrorLog(params)
+		
 	}
 
 	clickId := strings.Join([]string{

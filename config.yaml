@@ -1,0 +1,66 @@
+port: 8081
+
+redis:
+  # offer,channel,blacklist,subpub
+  entity:
+    address: localhost:6379
+    password:
+    db: 8
+    maxIdle: 10
+    maxActive: 50
+    idleTimeout: 1000
+  daycap:
+    address: localhost:6379
+    password:
+    db: 9
+    maxIdle: 10
+    maxActive: 10
+    idleTimeout: 1000
+  delaytask:
+    address: localhost:6379
+    password:
+    db: 10
+    maxIdle: 10
+    maxActive: 10
+    idleTimeout: 1000
+  pubsub:
+    address: localhost:6379
+    password:
+    db: 8
+    maxIdle: 2
+    maxActive: 10
+    idleTimeout: 1000
+
+mongodb:
+  click1:
+    addr: mongodb://localhost:27017
+    user:
+    password:
+    dbname: gt_log
+  click2:
+    addr: mongodb://localhost:27017
+    user:
+    password:
+    dbname: gt_log
+  conversion:
+    addr: mongodb://localhost:27017
+    user:
+    password:
+    dbname: gt_log
+
+httpcli:
+  timeout: 10000
+  maxIdleConns: 100
+  maxIdleConnsPerHost: 50
+
+logworker:
+  address: localhost:6668
+  nodes:
+    - localhost:6668#1
+    #- localhost:6661:2
+
+queue:
+  localDataDir:  ./logs/queue
+  delayDataDir: ./logs/task
+
+logDataDir: ./logs

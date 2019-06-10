@@ -8,6 +8,7 @@ import (
 	"destroyer-monitor/services/handler/internal"
 	"destroyer-monitor/utils"
 	"encoding/json"
+	"fmt"
 )
 
 const (
@@ -16,17 +17,17 @@ const (
 )
 
 type ClickHandler struct {
-	handlerMap map[string]handler
+	handlerMap map[string]clickHandler
 }
 
 func NewClickHandler(redisDao *dao.RedisDao, queue queue.Queue, httpCli *utils.HttpConPool) *ClickHandler {
-	handlerMap := make(map[string]handler)
+	handlerMap := make(map[string]clickHandler)
 	handlerMap[API_CLICK] = &internal.ApiClickHandler{RedisDao: redisDao, Queue: queue}
 	handlerMap[CUSTOMER_CLICK] = &internal.CustomerClickHandler{RedisDao: redisDao, Queue: queue, HttpCli: httpCli}
 	return &ClickHandler{handlerMap}
 }
 
-type handler interface {
+type clickHandler interface {
 	Handle(*models.ClickParams) *models.Response
 }
 
@@ -40,7 +41,7 @@ func (c *ClickHandler) Handle(params *models.ClickParams) *models.Response {
 		zap.Get().Error("bad request, data=", string(data))
 		return &models.Response{
 			Code:    200,
-			Content: "parameter error [api]",
+			Content: fmt.Sprintf("parameter error, api=%s", api),
 		}
 	}
 }

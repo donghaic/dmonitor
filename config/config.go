@@ -10,13 +10,15 @@ import (
 type Config struct {
 	Port int
 
+	Logworker logworker
+
 	Redis redisCnf
 
 	Mongodb mongoCnf
 
-	Httpcli HttpCli
+	Queue queue
 
-	LocalQueueDataDir string
+	Httpcli HttpCli
 
 	LogDataDir string
 }
@@ -45,17 +47,30 @@ func ReadConfig(configFile string) (*Config, error) {
 }
 
 type redisCnf struct {
-	Entity redis.PoolOption
-	Pubsub redis.PoolOption
+	Entity    redis.PoolOption // 推送数据 offer,channel,blacklist
+	Daycap    redis.PoolOption // 投放转化数据
+	Pubsub    redis.PoolOption // Redis通知订阅
+	Delaytask redis.PoolOption // 延迟队列
 }
 
 type mongoCnf struct {
-	Log    mongo.DBOption
-	Report mongo.DBOption
+	Click1     mongo.DBOption
+	Click2     mongo.DBOption
+	Conversion mongo.DBOption
 }
 
 type HttpCli struct {
 	Timeout             int
 	MaxIdleConns        int
 	MaxIdleConnsPerHost int
+}
+
+type logworker struct {
+	Address string
+	Nodes   []string
+}
+
+type queue struct {
+	LocalDataDir string
+	DelayDataDir string
 }
